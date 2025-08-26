@@ -382,7 +382,7 @@
             try {
                 // ⚠️ استبدل <username> باسمك في Cloudflare
                 // مثال: https://price-api.amiral5e7er.workers.dev
-                const response = await fetch(`https://price-api.8c4d764f48ea5ac18f264e674da4f33e.workers.dev?item=${encodeURIComponent(searchTerm)}&unit=${encodeURIComponent(unit)}`);
+                const response = await fetch(`https://price-api.amirelbarbari.workers.dev?item=${encodeURIComponent(searchTerm)}&unit=${encodeURIComponent(unit)}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
