@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>أمير الخطير - آلة حاسبة ذكية</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+            font-size: 14px;
+        }
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 3px solid #5a67d8;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .main-menu {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .menu-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #dee2e6;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+        .menu-item h2 {
+            font-size: 22px;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .menu-item p {
+            color: #6c757d;
+            font-size: 16px;
+        }
+        .calculator {
+            display: none;
+            padding: 20px;
+        }
+        .project-title {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .project-title input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+        .import-btn { background: #17a2b8; color: white; }
+        .export-btn { background: #28a745; color: white; }
+        .print-btn { background: #6f42c1; color: white; }
+        .reset-btn { background: #dc3545; color: white; }
+        button:hover { transform: translateY(-2px); }
+
+        .controls {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            background: #f1f3f5;
+            font-size: 13px;
+        }
+        .tax-toggle {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #495057;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 45px;
+            height: 22px;
+            margin: 0 8px;
+        }
+        .switch input { opacity: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background: #667eea; }
+        input:checked + .slider:before { transform: translateX(23px); }
+
+        .add-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #e3f2fd; }
+        input, select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .totals-display {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: #e9ecef;
+            border-radius: 6px;
+        }
+        .total-label {
+            font-weight: bold;
+            color: #495057;
+            min-width: 180px;
+        }
+        .total-value {
+            text-align: right;
+            direction: ltr;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 350px;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .suggestion-item:hover {
+            background: #e9ecef;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .suggestion-price {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .suggestion-range {
+            color: #6c757d;
+            font-size: 11px;
+        }
+        .suggestion-source {
+            color: #007bff;
+            font-size: 10px;
+        }
+        .ai-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>أمير الخطير</h1>
+            <div class="subtitle">آلة حاسبة لجدول كميات المشاريع - متصلة بالذكاء الاصطناعي</div>
+        </header>
+        
+        <div class="main-menu" id="main-menu">
+            <div class="menu-item" onclick="showCalculator(2)">
+                <h2>جدول بسنتين</h2>
+                <p>إنشاء جدول كميات لمشروع مدته سنتين</p>
+            </div>
+            <div class="menu-item" onclick="showCalculator(3)">
+                <h2>جدول بثلاث سنوات</h2>
+                <p>إنشاء جدول كميات لمشروع مدته ثلاث سنوات</p>
+            </div>
+            <div class="menu-item" onclick="showCalculator(4)">
+                <h2>جدول بأربع سنوات</h2>
+                <p>إنشاء جدول كميات لمشروع مدته أربع سنوات</p>
+            </div>
+            <div class="menu-item" onclick="showCalculator(5)">
+                <h2>جدول بخمس سنوات</h2>
+                <p>إنشاء جدول كميات لمشروع مدته خمس سنوات</p>
+            </div>
+        </div>
+
+        <!-- Calculators for different year counts -->
+        <div id="calculator-2" class="calculator"></div>
+        <div id="calculator-3" class="calculator"></div>
+        <div id="calculator-4" class="calculator"></div>
+        <div id="calculator-5" class="calculator"></div>
+        
+        <!-- Price suggestions dropdown -->
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+
+    <script>
+        const taxRate = 0.15; // 15%
+        const unitsList = [
+            "عدد", "حبة", "كيلو", "جرام", "لتر", "مل", "متر", "متر مربع", "متر مكعب",
+            "قطعة", "علبة", "كرتون", "زوج", "وحدة", "ساعة", "يوم", "شهر", "طن", "رطل",
+            "غالون", "ياردة", "قدم", "بوصة", "كم", "ملم", "سم", "هكتار", "دونم", "فدان"
+        ];
+
+        // دالة تحويل الأرقام إلى كلمات عربية
+        function numberToArabicWords(number) {
+            if (number === 0) return 'صفر';
+            const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة',
+                         'عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 
+                         'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر'];
+            const tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+            const hundreds = ['', 'مائة', 'مئتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+            const units = ['', 'ألف', 'مليون', 'مليار'];
+            
+            function convertThreeDigits(num) {
+                let result = '';
+                const hundred = Math.floor(num / 100);
+                const remainder = num % 100;
+                
+                if (hundred > 0) {
+                    result += hundreds[hundred];
+                    if (remainder > 0) result += ' و ';
+                }
+                
+                if (remainder > 0) {
+                    if (remainder < 20) {
+                        result += ones[remainder];
+                    } else {
+                        const ten = Math.floor(remainder / 10);
+                        const one = remainder % 10;
+                        if (one > 0) result += ones[one] + ' و ';
+                        result += tens[ten];
+                    }
+                }
+                return result;
+            }
+            
+            let result = '';
+            let unitIndex = 0;
+            let tempNumber = Math.floor(number);
+            
+            while (tempNumber > 0) {
+                const threeDigits = tempNumber % 1000;
+                if (threeDigits > 0) {
+                    let part = convertThreeDigits(threeDigits);
+                    if (unitIndex > 0) {
+                        part += ' ' + units[unitIndex];
+                        if (threeDigits === 1 && unitIndex === 1) part = units[unitIndex];
+                    }
+                    result = result ? part + ' و ' + result : part;
+                }
+                tempNumber = Math.floor(tempNumber / 1000);
+                unitIndex++;
+            }
+            
+            return result;
+        }
+
+        function formatArabicCurrency(amount) {
+            const wholePart = Math.floor(amount);
+            const decimalPart = Math.round((amount - wholePart) * 100);
+            let result = '';
+            
+            if (wholePart > 0) {
+                result += numberToArabicWords(wholePart) + ' ريال سعودي';
+            } else {
+                result = 'صفر ريال سعودي';
+            }
+            
+            if (decimalPart > 0) {
+                result += ' و ' + numberToArabicWords(decimalPart) + ' هللة';
+            }
+            
+            return result;
+        }
+
+        // ✅ دالة الاتصال بالذكاء الاصطناعي (Cloudflare Worker)
+        async function getPriceSuggestions(searchTerm, unit) {
+            try {
+                // ⚠️ استبدل <username> باسمك في Cloudflare
+                const response = await fetch(`https://price-api.<amirelbarbary>.workers.dev?item=${encodeURIComponent(searchTerm)}&unit=${encodeURIComponent(unit)}`);
+                const data = await response.json();
+                if (data.error) return [];
+                return Array.isArray(data) ? data : [data];
+            } catch (error) {
+                console.error("فشل في جلب السعر:", error);
+                return [];
+            }
+        }
+
+        function createCalculator(yearsCount) {
+            const container = document.getElementById(`calculator-${yearsCount}`);
+            container.innerHTML = `
+                <div class="project-title">
+                    <input type="text" class="project-name" placeholder="اسم المشروع">
+                    <div class="action-buttons">
+                        <button class="import-btn" data-years="${yearsCount}">📁 استيراد</button>
+                        <button class="export-btn" data-years="${yearsCount}">💾 تصدير</button>
+                        <button class="print-btn" data-years="${yearsCount}">🖨️ طباعة</button>
+                        <button class="reset-btn" data-years="${yearsCount}">🗑️ مسح</button>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="tax-toggle">
+                        <span>السعر شامل الضريبة</span>
+                        <label class="switch">
+                            <input type="checkbox" class="tax-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span>السعر غير شامل</span>
+                    </div>
+                    <button class="add-btn" data-years="${yearsCount}">➕ إضافة بند</button>
+                </div>
+                <div class="table-container">
+                    <table class="calculator-table">
+                        <thead>
+                            <tr class="header-row">
+                                <th width="2%">م</th>
+                                <th width="18%">البند</th>
+                                <th width="7%">وحدة القياس</th>
+                                <th width="8%">الكمية الإجمالية</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="totals-display">
+                    <div>الإجماليات بالتفقيط:</div>
+                    <div class="totals-grid">
+                        <div class="total-item">
+                            <div class="total-label">إجمالي الكميات:</div>
+                            <div class="total-value" id="total-quantity-text">0.00 - صفر</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">إجمالي ضريبة السعر الإفرادي:</div>
+                            <div class="total-value" id="total-individual-tax-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">إجمالي السعر غير شامل الضريبة:</div>
+                            <div class="total-value" id="total-ex-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">إجمالي ضريبة السعر الإجمالي:</div>
+                            <div class="total-value" id="total-tax-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">الإجمالي النهائي شامل الضريبة:</div>
+                            <div class="total-value" id="total-inc-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // إضافة أعمدة السنوات
+            const headerRow = container.querySelector('.header-row');
+            for (let i = 1; i <= yearsCount; i++) {
+                const th = document.createElement('th');
+                th.width = '6%';
+                th.textContent = `السنة ${i}`;
+                headerRow.appendChild(th);
+            }
+            
+            // إضافة باقي الأعمدة
+            const columns = [
+                { text: 'السعر الإفرادي', id: 'price' },
+                { text: 'ضريبة', id: 'tax-toggle' },
+                { text: 'ضريبة السعر الفردي', id: 'individual-tax' },
+                { text: 'السعر الإجمالي (غير شامل)', id: 'total-ex' },
+                { text: 'ضريبة الإجمالي', id: 'total-tax' },
+                { text: 'الإجمالي (شامل)', id: 'total-inc' },
+                { text: 'حذف', id: 'delete' }
+            ];
+            
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.width = col.id === 'price' ? '8%' : 
+                          col.id === 'tax-toggle' ? '5%' : 
+                          col.id === 'individual-tax' ? '9%' : 
+                          col.id === 'delete' ? '2%' : '10%';
+                th.textContent = col.text;
+                headerRow.appendChild(th);
+            });
+            
+            // إضافة صف افتراضي
+            addRow(container, yearsCount);
+            setupEvents(container, yearsCount);
+        }
+
+        function addRow(container, yearsCount) {
+            const tbody = container.querySelector('tbody');
+            const rowCount = tbody.children.length + 1;
+            const row = document.createElement('tr');
+            
+            let yearInputs = '';
+            for (let i = 1; i <= yearsCount; i++) {
+                yearInputs += `<td><input type="number" class="year${i}" min="0" value="0" step="0.01"></td>`;
+            }
+            
+            row.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="item-name" placeholder="اسم البند"></td>
+                <td><input type="text" class="unit-input" placeholder="اختر أو اكتب"></td>
+                <td><input type="number" class="quantity" min="0" value="0" step="0.01"></td>
+                ${yearInputs}
+                <td><input type="number" class="price" min="0" value="0" step="0.01"></td>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" class="item-tax-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td class="individual-tax">0.00</td>
+                <td class="total-ex">0.00</td>
+                <td class="total-tax">0.00</td>
+                <td class="total-inc">0.00</td>
+                <td><button class="delete-btn">X</button></td>
+            `;
+            
+            tbody.appendChild(row);
+            setupUnitInput(row.querySelector('.unit-input'));
+            setupNameInput(row.querySelector('.item-name'), row.querySelector('.unit-input'), row.querySelector('.price'), container, yearsCount);
+            updateRowEvents(row, container, yearsCount);
+        }
+
+        function setupUnitInput(input) {
+            const datalist = document.createElement('datalist');
+            datalist.id = 'units-list';
+            unitsList.forEach(unit => {
+                const opt = document.createElement('option');
+                opt.value = unit;
+                datalist.appendChild(opt);
+            });
+            if (!document.getElementById('units-list')) {
+                document.body.appendChild(datalist);
+            }
+            input.setAttribute('list', 'units-list');
+        }
+        
+        function setupNameInput(nameInput, unitInput, priceInput, container, yearsCount) {
+            const suggestions = document.getElementById('suggestions');
+            
+            nameInput.addEventListener('input', async () => {
+                if (nameInput.value.trim().length > 1) {
+                    const suggestionsList = await getPriceSuggestions(nameInput.value, unitInput.value);
+                    showSuggestions(suggestionsList, suggestions, priceInput, nameInput, unitInput, container, yearsCount);
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+            
+            nameInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    suggestions.style.display = 'none';
+                }, 200);
+            });
+        }
+        
+        function showSuggestions(suggestionsList, suggestionsContainer, priceInput, nameInput, unitInput, container, yearsCount) {
+            suggestionsContainer.innerHTML = '';
+            if (suggestionsList.length === 0) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
+            const rect = priceInput.getBoundingClientRect();
+            suggestionsContainer.style.top = (rect.bottom + window.scrollY) + 'px';
+            suggestionsContainer.style.right = (window.innerWidth - rect.right) + 'px';
+            
+            suggestionsList.forEach(suggestion => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="suggestion-name"><span class="ai-badge">AI</span> ${suggestion.name}</div>
+                        <div class="suggestion-range">النطاق: ${suggestion.min} - ${suggestion.max} ر.س</div>
+                        <div class="suggestion-source">${suggestion.source}</div>
+                    </div>
+                    <div class="suggestion-price">${suggestion.price} ر.س</div>
+                `;
+                div.addEventListener('click', () => {
+                    const row = priceInput.closest('tr');
+                    row.querySelector('.item-name').value = suggestion.name;
+                    row.querySelector('.unit-input').value = suggestion.unit;
+                    row.querySelector('.price').value = suggestion.price;
+                    calculateRow(row, yearsCount);
+                    calculateAll(container, yearsCount);
+                    suggestionsContainer.style.display = 'none';
+                });
+                suggestionsContainer.appendChild(div);
+            });
+            
+            suggestionsContainer.style.display = 'block';
+        }
+
+        function distributeQuantity(row, yearsCount) {
+            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            const years = [];
+            for (let i = 1; i <= yearsCount; i++) {
+                years.push(row.querySelector(`.year${i}`));
+            }
+            const share = (qty / yearsCount).toFixed(2);
+            years.forEach(input => {
+                if (!input.value || input.value === "0") input.value = share;
+            });
+            calculateRow(row, yearsCount);
+        }
+
+        function updateTotalFromYears(row, yearsCount) {
+            let total = 0;
+            for (let i = 1; i <= yearsCount; i++) {
+                total += parseFloat(row.querySelector(`.year${i}`).value) || 0;
+            }
+            row.querySelector('.quantity').value = total.toFixed(2);
+            calculateRow(row, yearsCount);
+        }
+
+        function calculateRow(row, yearsCount) {
+            const priceInput = row.querySelector('.price');
+            const price = parseFloat(priceInput.value) || 0;
+            const isTaxExcluded = row.querySelector('.item-tax-toggle').checked;
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+
+            let basePrice, taxAmount;
+
+            if (isTaxExcluded) {
+                basePrice = price;
+                taxAmount = price * taxRate;
+            } else {
+                basePrice = price / (1 + taxRate);
+                taxAmount = price - basePrice;
+            }
+
+            const totalPriceEx = quantity * basePrice;
+            const totalTax = totalPriceEx * taxRate;
+            const totalPriceInc = totalPriceEx + totalTax;
+
+            row.querySelector('.individual-tax').textContent = taxAmount.toFixed(2);
+            row.querySelector('.total-ex').textContent = totalPriceEx.toFixed(2);
+            row.querySelector('.total-tax').textContent = totalTax.toFixed(2);
+            row.querySelector('.total-inc').textContent = totalPriceInc.toFixed(2);
+        }
+
+        function calculateAll(container, yearsCount) {
+            let totalQty = 0, totalEx = 0, totalTax = 0, totalInc = 0, totalIndTax = 0;
+
+            container.querySelectorAll('tbody tr').forEach(row => {
+                totalQty += parseFloat(row.querySelector('.quantity').value) || 0;
+                totalEx += parseFloat(row.querySelector('.total-ex').textContent) || 0;
+                totalTax += parseFloat(row.querySelector('.total-tax').textContent) || 0;
+                totalInc += parseFloat(row.querySelector('.total-inc').textContent) || 0;
+                totalIndTax += parseFloat(row.querySelector('.individual-tax').textContent) || 0;
+            });
+
+            container.querySelector('#total-quantity-text').textContent = 
+                `${totalQty.toFixed(2)} - ${numberToArabicWords(totalQty)}`;
+            container.querySelector('#total-individual-tax-text').textContent = 
+                `${totalIndTax.toFixed(2)} - ${formatArabicCurrency(totalIndTax)}`;
+            container.querySelector('#total-ex-text').textContent = 
+                `${totalEx.toFixed(2)} - ${formatArabicCurrency(totalEx)}`;
+            container.querySelector('#total-tax-text').textContent = 
+                `${totalTax.toFixed(2)} - ${formatArabicCurrency(totalTax)}`;
+            container.querySelector('#total-inc-text').textContent = 
+                `${totalInc.toFixed(2)} - ${formatArabicCurrency(totalInc)}`;
+        }
+
+        function updateRowEvents(row, container, yearsCount) {
+            row.querySelector('.quantity').addEventListener('change', () => {
+                distributeQuantity(row, yearsCount);
+                calculateAll(container, yearsCount);
+            });
+            
+            for (let i = 1; i <= yearsCount; i++) {
+                row.querySelector(`.year${i}`).addEventListener('input', () => {
+                    updateTotalFromYears(row, yearsCount);
+                    calculateAll(container, yearsCount);
+                });
+            }
+            
+            row.querySelector('.price').addEventListener('input', () => {
+                calculateRow(row, yearsCount);
+                calculateAll(container, yearsCount);
+            });
+            
+            row.querySelector('.item-tax-toggle').addEventListener('change', () => {
+                calculateRow(row, yearsCount);
+                calculateAll(container, yearsCount);
+            });
+            
+            row.querySelector('.delete-btn').addEventListener('click', () => {
+                if (container.querySelector('tbody').children.length > 1) {
+                    row.remove();
+                    updateRowNumbers(container);
+                    calculateAll(container, yearsCount);
+                }
+            });
+        }
+
+        function updateRowNumbers(container) {
+            container.querySelectorAll('tbody tr').forEach((tr, i) => {
+                tr.cells[0].textContent = i + 1;
+            });
+        }
+
+        function setupEvents(container, yearsCount) {
+            container.querySelector('.add-btn').addEventListener('click', () => {
+                addRow(container, yearsCount);
+                updateRowNumbers(container);
+            });
+            
+            container.querySelector('.reset-btn').addEventListener('click', () => {
+                if (confirm("مسح الكل؟")) {
+                    container.querySelector('tbody').innerHTML = '';
+                    container.querySelector('.project-name').value = '';
+                    addRow(container, yearsCount);
+                    calculateAll(container, yearsCount);
+                }
+            });
+            
+            container.querySelector('.export-btn').addEventListener('click', () => {
+                const projectName = container.querySelector('.project-name').value || 'مشروع';
+                const data = [[projectName], []];
+                const headers = ['م', 'البند', 'وحدة', 'الكمية'];
+                for (let i = 1; i <= yearsCount; i++) {
+                    headers.push(`السنة ${i}`);
+                }
+                headers.push('السعر', 'ضريبة', 'ض.فردي', 'غير شامل', 'ض.إجمالي', 'شامل', 'حذف');
+                data.push(headers);
+                
+                container.querySelectorAll('tbody tr').forEach(row => {
+                    const rowData = [
+                        row.cells[0].textContent,
+                        row.querySelector('.item-name').value,
+                        row.querySelector('.unit-input').value,
+                        row.querySelector('.quantity').value
+                    ];
+                    for (let i = 1; i <= yearsCount; i++) {
+                        rowData.push(row.querySelector(`.year${i}`).value);
+                    }
+                    rowData.push(
+                        row.querySelector('.price').value,
+                        row.querySelector('.item-tax-toggle').checked ? 'نعم' : 'لا',
+                        row.querySelector('.individual-tax').textContent,
+                        row.querySelector('.total-ex').textContent,
+                        row.querySelector('.total-tax').textContent,
+                        row.querySelector('.total-inc').textContent,
+                        'X'
+                    );
+                    data.push(rowData);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [
+                    {wch: 5}, {wch: 25}, {wch: 10}, {wch: 12},
+                    ...Array(yearsCount).fill({wch: 10}),
+                    {wch: 12}, {wch: 8}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 5}
+                ];
+                
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'الكميات');
+                XLSX.writeFile(wb, `${projectName}.xlsx`);
+            });
+            
+            container.querySelector('.import-btn').addEventListener('click', () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.xlsx, .xls';
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, {type: 'array'});
+                            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                            const jsonData = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                            
+                            container.querySelector('tbody').innerHTML = '';
+                            
+                            for (let i = 1; i < jsonData.length; i++) {
+                                if (jsonData[i].length < 4) continue;
+                                
+                                addRow(container, yearsCount);
+                                const row = container.querySelector('tbody tr:last-child');
+                                
+                                const rowData = jsonData[i];
+                                row.querySelector('.item-name').value = rowData[1] || '';
+                                row.querySelector('.unit-input').value = rowData[2] || '';
+                                row.querySelector('.quantity').value = rowData[3] || 0;
+                                
+                                const yearStartIndex = 4;
+                                for (let j = 0; j < yearsCount; j++) {
+                                    if (rowData[yearStartIndex + j] !== undefined) {
+                                        row.querySelector(`.year${j+1}`).value = rowData[yearStartIndex + j] || 0;
+                                    }
+                                }
+                                
+                                const priceIndex = yearStartIndex + yearsCount;
+                                if (rowData[priceIndex] !== undefined) {
+                                    row.querySelector('.price').value = rowData[priceIndex] || 0;
+                                }
+                                
+                                const taxIndex = priceIndex + 1;
+                                if (rowData[taxIndex] !== undefined) {
+                                    row.querySelector('.item-tax-toggle').checked = rowData[taxIndex] === 'نعم';
+                                }
+                                
+                                calculateRow(row, yearsCount);
+                            }
+                            
+                            updateRowNumbers(container);
+                            calculateAll(container, yearsCount);
+                        } catch (error) {
+                            alert('خطأ في قراءة الملف: ' + error.message);
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                };
+                fileInput.click();
+            });
+            
+            container.querySelector('.print-btn').addEventListener('click', () => {
+                window.print();
+            });
+        }
+
+        function showCalculator(yearsCount) {
+            document.getElementById('main-menu').style.display = 'none';
+            document.querySelectorAll('.calculator').forEach(calc => {
+                calc.style.display = 'none';
+            });
+            const container = document.getElementById(`calculator-${yearsCount}`);
+            if (container.innerHTML === '') {
+                createCalculator(yearsCount);
+            }
+            container.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            for (let i = 2; i <= 5; i++) {
+                createCalculator(i);
+                document.getElementById(`calculator-${i}`).style.display = 'none';
+            }
+            const suggestions = document.createElement('div');
+            suggestions.id = 'suggestions';
+            suggestions.className = 'suggestions';
+            document.body.appendChild(suggestions);
+        });
+    </script>
+</body>
+</html>
