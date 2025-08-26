@@ -2,16 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>أمير الخطير - آلة حاسبة ذكية</title>
-    <!-- تحميل مكتبات React و ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- تحميل مكتبة Babel للتحويل من JSX إلى JavaScript -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- تحميل Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -20,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f2f5;
             padding: 20px;
             min-height: 100vh;
             color: #333;
@@ -119,6 +111,7 @@
         .print-btn { background: #6f42c1; color: white; }
         .reset-btn { background: #dc3545; color: white; }
         button:hover { transform: translateY(-2px); }
+
         .controls {
             padding: 15px;
             display: flex;
@@ -161,10 +154,12 @@
         }
         input:checked + .slider { background: #667eea; }
         input:checked + .slider:before { transform: translateX(23px); }
+
         .add-btn {
             background: #28a745;
             color: white;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -194,6 +189,7 @@
             outline: none;
             border-color: #667eea;
         }
+
         .delete-btn {
             background: #dc3545;
             color: white;
@@ -202,6 +198,7 @@
             border-radius: 4px;
             font-size: 11px;
         }
+
         .totals-display {
             margin: 20px 0;
             padding: 15px;
@@ -233,25 +230,23 @@
             font-weight: bold;
             color: #28a745;
         }
+        
         .suggestions {
             position: absolute;
             background: white;
             border: 1px solid #ddd;
             border-radius: 6px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            max-height: 300px;
+            max-height: 200px;
             overflow-y: auto;
             z-index: 1000;
-            width: 350px;
+            width: 300px;
             display: none;
         }
         .suggestion-item {
-            padding: 10px 12px;
+            padding: 8px 12px;
             cursor: pointer;
             border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         .suggestion-item:hover {
             background: #e9ecef;
@@ -259,51 +254,63 @@
         .suggestion-item:last-child {
             border-bottom: none;
         }
-        .suggestion-name {
-            font-weight: bold;
-            color: #333;
-        }
         .suggestion-price {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .suggestion-range {
             color: #6c757d;
             font-size: 11px;
+            margin-right: 5px;
         }
         .suggestion-source {
             color: #007bff;
-            font-size: 10px;
-        }
-        .ai-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 8px;
             font-size: 10px;
             margin-right: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        // تهيئة Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDc9X5v7Y7Z3X8X9X0X1X2X3X4X5X6X7X8",
-            authDomain: "price-suggestions-db.firebaseapp.com",
-            projectId: "price-suggestions-db",
-            storageBucket: "price-suggestions-db.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdef1234567890"
-        };
+    <div class="container">
+        <header>
+            <h1>أمير الخطير</h1>
+            <div class="subtitle">آلة حاسبة لجدول كميات المشاريع - متصلة بالذكاء الاصطناعي</div>
+        </header>
         
-        // تهيئة Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        <div class="main-menu" id="main-menu">
+            <div class="menu-item" onclick="showCalculator(2)">
+                <h2>جدول بسنتين</h2>
+                <p>إنشاء جدول كميات لمشروع مدته سنتين</p>
+            </div>
+            <div class="menu-item" onclick="showCalculator(3)">
+                <h2>جدول بثلاث سنوات</h2>
+                <p>إنشاء جدول كميات لمشروع مدته ثلاث سنوات</p>
+            </div>
+            <div class="menu-item" onclick="showCalculator(4)">
+                <h2>جدول بأربع سنوات</h2>
+                <p>إنشاء جدول كميات لمشروع مدته أربع سنوات</p>
+            </div>
+            <div class="menu-item" onclick="showCalculator(5)">
+                <h2>جدول بخمس سنوات</h2>
+                <p>إنشاء جدول كميات لمشروع مدته خمس سنوات</p>
+            </div>
+        </div>
 
-        // دالة لتحويل الأرقام إلى كلمات عربية
+        <!-- Calculators for different year counts -->
+        <div id="calculator-2" class="calculator"></div>
+        <div id="calculator-3" class="calculator"></div>
+        <div id="calculator-4" class="calculator"></div>
+        <div id="calculator-5" class="calculator"></div>
+        
+        <!-- Price suggestions dropdown -->
+        <div id="suggestions" class="suggestions"></div>
+    </div>
+
+    <script>
+        const taxRate = 0.15; // 15%
+        const unitsList = [
+            "عدد", "حبة", "كيلو", "جرام", "لتر", "مل", "متر", "متر مربع", "متر مكعب",
+            "قطعة", "علبة", "كرتون", "زوج", "وحدة", "ساعة", "يوم", "شهر", "طن", "رطل",
+            "غالون", "ياردة", "قدم", "بوصة", "كم", "ملم", "سم", "هكتار", "دونم", "فدان"
+        ];
+
+        // دالة تحويل الأرقام إلى كلمات عربية
         function numberToArabicWords(number) {
             if (number === 0) return 'صفر';
             const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة',
@@ -375,496 +382,504 @@
             return result;
         }
 
-        // المكون الرئيسي
-        function App() {
-            const [currentCalculator, setCurrentCalculator] = React.useState(null);
-            const [projectName, setProjectName] = React.useState('');
-            const [taxRate, setTaxRate] = React.useState(0.15);
-            const [taxMode, setTaxMode] = React.useState(false);
-            const [rows, setRows] = React.useState([]);
-            const [suggestions, setSuggestions] = React.useState([]);
-            const [showSuggestions, setShowSuggestions] = React.useState(false);
-            const [suggestionsPosition, setSuggestionsPosition] = React.useState({ top: 0, right: 0 });
-            
-            // إضافة صف جديد
-            const addRow = () => {
-                const newRow = {
-                    id: Date.now(),
-                    item: '',
-                    unit: '',
-                    quantity: 0,
-                    year1: 0,
-                    year2: 0,
-                    year3: 0,
-                    price: 0,
-                    tax: false
-                };
-                setRows([...rows, newRow]);
-            };
-            
-            // حذف صف
-            const deleteRow = (id) => {
-                if (rows.length > 1) {
-                    setRows(rows.filter(row => row.id !== id));
-                }
-            };
-            
-            // تحديث بيانات الصف
-            const updateRow = (id, field, value) => {
-                setRows(rows.map(row => {
-                    if (row.id === id) {
-                        const updatedRow = { ...row, [field]: value };
-                        
-                        // إذا تم تغيير الكمية، نوزعها على السنوات
-                        if (field === 'quantity') {
-                            const qty = parseFloat(value) || 0;
-                            const yearsCount = currentCalculator || 3;
-                            const share = (qty / yearsCount).toFixed(2);
-                            updatedRow.year1 = share;
-                            updatedRow.year2 = share;
-                            updatedRow.year3 = share;
-                        }
-                        
-                        return updatedRow;
-                    }
-                    return row;
-                }));
-            };
-            
-            // حساب السعر الإجمالي للصف
-            const calculateRowTotal = (row) => {
-                const price = parseFloat(row.price) || 0;
-                const quantity = parseFloat(row.quantity) || 0;
-                const isTaxExcluded = row.tax;
-                
-                let basePrice, taxAmount;
-                
-                if (isTaxExcluded) {
-                    basePrice = price;
-                    taxAmount = price * taxRate;
-                } else {
-                    basePrice = price / (1 + taxRate);
-                    taxAmount = price - basePrice;
-                }
-                
-                const totalPriceEx = quantity * basePrice;
-                const totalTax = totalPriceEx * taxRate;
-                const totalPriceInc = totalPriceEx + totalTax;
-                
-                return {
-                    individualTax: taxAmount.toFixed(2),
-                    totalEx: totalPriceEx.toFixed(2),
-                    totalTax: totalPriceTax.toFixed(2),
-                    totalInc: totalPriceInc.toFixed(2)
-                };
-            };
-            
-            // حساب الإجماليات
-            const calculateTotals = () => {
-                let totalQty = 0, totalEx = 0, totalTax = 0, totalInc = 0, totalIndTax = 0;
-                
-                rows.forEach(row => {
-                    const totals = calculateRowTotal(row);
-                    totalQty += parseFloat(row.quantity) || 0;
-                    totalEx += parseFloat(totals.totalEx) || 0;
-                    totalTax += parseFloat(totals.totalTax) || 0;
-                    totalInc += parseFloat(totals.totalInc) || 0;
-                    totalIndTax += parseFloat(totals.individualTax) || 0;
-                });
-                
-                return {
-                    totalQty,
-                    totalEx,
-                    totalTax,
-                    totalInc,
-                    totalIndTax
-                };
-            };
-            
-            // دالة للحصول على اقتراحات الأسعار من قاعدة بيانات Firebase
-            const getPriceSuggestions = async (searchTerm, unit) => {
-                try {
-                    // في التطبيق الحقيقي، نبحث في قاعدة بيانات Firebase
-                    const querySnapshot = await db.collection('prices')
-                        .where('item', '>=', searchTerm)
-                        .where('item', '<=', searchTerm + '\uf8ff')
-                        .get();
-                    
-                    const results = [];
-                    querySnapshot.forEach((doc) => {
-                        results.push(doc.data());
-                    });
-                    
-                    // إذا لم نجد نتائج، نستخدم قاعدة بيانات محلية
-                    if (results.length === 0) {
-                        const mockDatabase = {
-                            "اسمنت": { "كيلو": 4.5, "طن": 4500 },
-                            "حديد": { "كيلو": 18, "طن": 18000 },
-                            "رمل": { "متر مكعب": 120, "طن": 12000 },
-                            "بلاط": { "متر مربع": 35 },
-                            "أنابيب": { "متر": 15 },
-                            "أسلاك": { "متر": 8 },
-                            "لمبة": { "وحدة": 18 },
-                            "مكيف": { "وحدة": 1200 }
-                        };
-                        
-                        Object.keys(mockDatabase).forEach(item => {
-                            if (item.includes(searchTerm)) {
-                                const itemData = mockDatabase[item];
-                                Object.keys(itemData).forEach(itemUnit => {
-                                    if (!unit || unit === itemUnit) {
-                                        results.push({
-                                            item: `${item} (${itemUnit})`,
-                                            price: itemData[itemUnit],
-                                            unit: itemUnit,
-                                            source: "قاعدة بيانات محلية",
-                                            updated: new Date().toISOString()
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    
-                    return results;
-                } catch (error) {
-                    console.error("فشل في جلب السعر:", error);
-                    return [];
-                }
-            };
-            
-            // عرض اقتراحات الأسعار
-            const showPriceSuggestions = async (searchTerm, unit, inputElement) => {
-                if (searchTerm.trim().length > 1) {
-                    const results = await getPriceSuggestions(searchTerm, unit);
-                    setSuggestions(results);
-                    
-                    // تحديد موقع مربع الإدخال
-                    const rect = inputElement.getBoundingClientRect();
-                    setSuggestionsPosition({
-                        top: rect.bottom + window.scrollY,
-                        right: window.innerWidth - rect.right
-                    });
-                    
-                    setShowSuggestions(true);
-                } else {
-                    setShowSuggestions(false);
-                }
-            };
-            
-            // اختيار اقتراح
-            const selectSuggestion = (suggestion, rowId) => {
-                setRows(rows.map(row => {
-                    if (row.id === rowId) {
-                        return {
-                            ...row,
-                            item: suggestion.item,
-                            unit: suggestion.unit,
-                            price: suggestion.price
-                        };
-                    }
-                    return row;
-                }));
-                setShowSuggestions(false);
-            };
-            
-            // توزيع الكمية على السنوات
-            const distributeQuantity = (rowId) => {
-                const row = rows.find(r => r.id === rowId);
-                if (!row) return;
-                
-                const qty = parseFloat(row.quantity) || 0;
-                const yearsCount = currentCalculator || 3;
-                const share = (qty / yearsCount).toFixed(2);
-                
-                updateRow(rowId, 'year1', share);
-                updateRow(rowId, 'year2', share);
-                updateRow(rowId, 'year3', share);
-            };
-            
-            // عرض حاسبة معينة
-            const showCalculator = (yearsCount) => {
-                setCurrentCalculator(yearsCount);
-                // إضافة صف فارغ إذا لم يكن هناك صفوف
-                if (rows.length === 0) {
-                    addRow();
-                }
-            };
-            
-            // مسح الكل
-            const resetCalculator = () => {
-                if (window.confirm("مسح الكل؟")) {
-                    setRows([]);
-                    setProjectName('');
-                    addRow();
-                }
-            };
-            
-            // تصدير إلى Excel
-            const exportToExcel = () => {
-                // في التطبيق الحقيقي، نستخدم مكتبة xlsx
-                alert("متوفر في الإصدار الكامل");
-            };
-            
-            // حسابات الإجماليات
-            const totals = calculateTotals();
-            
-            return (
-                <div className="container">
-                    <header>
-                        <h1>أمير الخطير</h1>
-                        <div className="subtitle">آلة حاسبة لجدول كميات المشاريع - متصلة بالذكاء الاصطناعي</div>
-                    </header>
-                    
-                    {!currentCalculator ? (
-                        <div className="main-menu">
-                            <div className="menu-item" onClick={() => showCalculator(2)}>
-                                <h2>جدول بسنتين</h2>
-                                <p>إنشاء جدول كميات لمشروع مدته سنتين</p>
-                            </div>
-                            <div className="menu-item" onClick={() => showCalculator(3)}>
-                                <h2>جدول بثلاث سنوات</h2>
-                                <p>إنشاء جدول كميات لمشروع مدته ثلاث سنوات</p>
-                            </div>
-                            <div className="menu-item" onClick={() => showCalculator(4)}>
-                                <h2>جدول بأربع سنوات</h2>
-                                <p>إنشاء جدول كميات لمشروع مدته أربع سنوات</p>
-                            </div>
-                            <div className="menu-item" onClick={() => showCalculator(5)}>
-                                <h2>جدول بخمس سنوات</h2>
-                                <p>إنشاء جدول كميات لمشروع مدته خمس سنوات</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="calculator">
-                            <div className="project-title">
-                                <input 
-                                    type="text" 
-                                    value={projectName}
-                                    onChange={(e) => setProjectName(e.target.value)}
-                                    placeholder="اسم المشروع"
-                                />
-                                <div className="action-buttons">
-                                    <button className="import-btn">📁 استيراد</button>
-                                    <button className="export-btn" onClick={exportToExcel}>💾 تصدير</button>
-                                    <button className="print-btn">🖨️ طباعة</button>
-                                    <button className="reset-btn" onClick={resetCalculator}>🗑️ مسح</button>
-                                </div>
-                            </div>
-                            
-                            <div className="controls">
-                                <div className="tax-toggle">
-                                    <span>السعر شامل الضريبة</span>
-                                    <label className="switch">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={taxMode}
-                                            onChange={(e) => setTaxMode(e.target.checked)}
-                                        />
-                                        <span className="slider"></span>
-                                    </label>
-                                    <span>السعر غير شامل</span>
-                                </div>
-                                <button className="add-btn" onClick={addRow}>➕ إضافة بند</button>
-                            </div>
-                            
-                            <div className="table-container">
-                                <table className="calculator-table">
-                                    <thead>
-                                        <tr className="header-row">
-                                            <th width="2%">م</th>
-                                            <th width="18%">البند</th>
-                                            <th width="7%">وحدة القياس</th>
-                                            <th width="8%">الكمية الإجمالية</th>
-                                            <th width="6%">السنة 1</th>
-                                            <th width="6%">السنة 2</th>
-                                            <th width="6%">السنة 3</th>
-                                            <th width="8%">السعر الإفرادي</th>
-                                            <th width="5%">ضريبة</th>
-                                            <th width="9%">ضريبة السعر الفردي</th>
-                                            <th width="10%">السعر الإجمالي (غير شامل)</th>
-                                            <th width="10%">ضريبة الإجمالي</th>
-                                            <th width="10%">الإجمالي (شامل)</th>
-                                            <th width="2%">حذف</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {rows.map((row, index) => {
-                                            const rowTotals = calculateRowTotal(row);
-                                            return (
-                                                <tr key={row.id}>
-                                                    <td>{index + 1}</td>
-                                                    <td>
-                                                        <input 
-                                                            type="text" 
-                                                            value={row.item}
-                                                            onChange={(e) => {
-                                                                updateRow(row.id, 'item', e.target.value);
-                                                                showPriceSuggestions(e.target.value, row.unit, e.target);
-                                                            }}
-                                                            placeholder="اسم البند"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            type="text" 
-                                                            value={row.unit}
-                                                            onChange={(e) => {
-                                                                updateRow(row.id, 'unit', e.target.value);
-                                                                showPriceSuggestions(row.item, e.target.value, e.target);
-                                                            }}
-                                                            placeholder="اختر أو اكتب"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            type="number" 
-                                                            value={row.quantity}
-                                                            onChange={(e) => {
-                                                                updateRow(row.id, 'quantity', e.target.value);
-                                                                distributeQuantity(row.id);
-                                                            }}
-                                                            min="0" 
-                                                            step="0.01"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            type="number" 
-                                                            value={row.year1}
-                                                            onChange={(e) => updateRow(row.id, 'year1', e.target.value)}
-                                                            min="0" 
-                                                            step="0.01"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            type="number" 
-                                                            value={row.year2}
-                                                            onChange={(e) => updateRow(row.id, 'year2', e.target.value)}
-                                                            min="0" 
-                                                            step="0.01"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            type="number" 
-                                                            value={row.year3}
-                                                            onChange={(e) => updateRow(row.id, 'year3', e.target.value)}
-                                                            min="0" 
-                                                            step="0.01"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input 
-                                                            type="number" 
-                                                            value={row.price}
-                                                            onChange={(e) => updateRow(row.id, 'price', e.target.value)}
-                                                            min="0" 
-                                                            step="0.01"
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <label className="switch">
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={row.tax}
-                                                                onChange={(e) => updateRow(row.id, 'tax', e.target.checked)}
-                                                            />
-                                                            <span className="slider"></span>
-                                                        </label>
-                                                    </td>
-                                                    <td>{rowTotals.individualTax}</td>
-                                                    <td>{rowTotals.totalEx}</td>
-                                                    <td>{rowTotals.totalTax}</td>
-                                                    <td>{rowTotals.totalInc}</td>
-                                                    <td>
-                                                        <button 
-                                                            className="delete-btn" 
-                                                            onClick={() => deleteRow(row.id)}
-                                                        >
-                                                            X
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <div className="totals-display">
-                                <div>الإجماليات بالتفقيط:</div>
-                                <div className="totals-grid">
-                                    <div className="total-item">
-                                        <div className="total-label">إجمالي الكميات:</div>
-                                        <div className="total-value">
-                                            {totals.totalQty.toFixed(2)} - {numberToArabicWords(totals.totalQty)}
-                                        </div>
-                                    </div>
-                                    <div className="total-item">
-                                        <div className="total-label">إجمالي ضريبة السعر الإفرادي:</div>
-                                        <div className="total-value">
-                                            {totals.totalIndTax.toFixed(2)} - {formatArabicCurrency(totals.totalIndTax)}
-                                        </div>
-                                    </div>
-                                    <div className="total-item">
-                                        <div className="total-label">إجمالي السعر غير شامل الضريبة:</div>
-                                        <div className="total-value">
-                                            {totals.totalEx.toFixed(2)} - {formatArabicCurrency(totals.totalEx)}
-                                        </div>
-                                    </div>
-                                    <div className="total-item">
-                                        <div className="total-label">إجمالي ضريبة السعر الإجمالي:</div>
-                                        <div className="total-value">
-                                            {totals.totalTax.toFixed(2)} - {formatArabicCurrency(totals.totalTax)}
-                                        </div>
-                                    </div>
-                                    <div className="total-item">
-                                        <div className="total-label">الإجمالي النهائي شامل الضريبة:</div>
-                                        <div className="total-value">
-                                            {totals.totalInc.toFixed(2)} - {formatArabicCurrency(totals.totalInc)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* قائمة الاقتراحات */}
-                    {showSuggestions && (
-                        <div 
-                            className="suggestions"
-                            style={{
-                                top: suggestionsPosition.top,
-                                right: suggestionsPosition.right,
-                                display: 'block'
-                            }}
-                        >
-                            {suggestions.map((suggestion, index) => (
-                                <div 
-                                    key={index}
-                                    className="suggestion-item"
-                                    onClick={() => selectSuggestion(suggestion, rows[rows.length - 1]?.id)}
-                                >
-                                    <div>
-                                        <div className="suggestion-name">
-                                            <span className="ai-badge">AI</span> {suggestion.item}
-                                        </div>
-                                        <div className="suggestion-price">({suggestion.price} ر.س)</div>
-                                        <div className="suggestion-source">[{suggestion.source}]</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+        function createCalculator(yearsCount) {
+            const container = document.getElementById(`calculator-${yearsCount}`);
+            container.innerHTML = `
+                <div class="project-title">
+                    <input type="text" class="project-name" placeholder="اسم المشروع">
+                    <div class="action-buttons">
+                        <button class="import-btn" data-years="${yearsCount}">📁 استيراد</button>
+                        <button class="export-btn" data-years="${yearsCount}">💾 تصدير</button>
+                        <button class="print-btn" data-years="${yearsCount}">🖨️ طباعة</button>
+                        <button class="reset-btn" data-years="${yearsCount}">🗑️ مسح</button>
+                    </div>
                 </div>
-            );
+                <div class="controls">
+                    <div class="tax-toggle">
+                        <span>السعر شامل الضريبة</span>
+                        <label class="switch">
+                            <input type="checkbox" class="tax-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span>السعر غير شامل</span>
+                    </div>
+                    <button class="add-btn" data-years="${yearsCount}">➕ إضافة بند</button>
+                </div>
+                <div class="table-container">
+                    <table class="calculator-table">
+                        <thead>
+                            <tr class="header-row">
+                                <th width="2%">م</th>
+                                <th width="18%">البند</th>
+                                <th width="7%">وحدة القياس</th>
+                                <th width="8%">الكمية الإجمالية</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="totals-display">
+                    <div>الإجماليات بالتفقيط:</div>
+                    <div class="totals-grid">
+                        <div class="total-item">
+                            <div class="total-label">إجمالي الكميات:</div>
+                            <div class="total-value" id="total-quantity-text">0.00 - صفر</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">إجمالي ضريبة السعر الإفرادي:</div>
+                            <div class="total-value" id="total-individual-tax-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">إجمالي السعر غير شامل الضريبة:</div>
+                            <div class="total-value" id="total-ex-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">إجمالي ضريبة السعر الإجمالي:</div>
+                            <div class="total-value" id="total-tax-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                        <div class="total-item">
+                            <div class="total-label">الإجمالي النهائي شامل الضريبة:</div>
+                            <div class="total-value" id="total-inc-text">0.00 - صفر ريال سعودي</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // إضافة أعمدة السنوات
+            const headerRow = container.querySelector('.header-row');
+            for (let i = 1; i <= yearsCount; i++) {
+                const th = document.createElement('th');
+                th.width = '6%';
+                th.textContent = `السنة ${i}`;
+                headerRow.appendChild(th);
+            }
+            
+            // إضافة باقي الأعمدة
+            const columns = [
+                { text: 'السعر الإفرادي', id: 'price' },
+                { text: 'ضريبة', id: 'tax-toggle' },
+                { text: 'ضريبة السعر الفردي', id: 'individual-tax' },
+                { text: 'السعر الإجمالي (غير شامل)', id: 'total-ex' },
+                { text: 'ضريبة الإجمالي', id: 'total-tax' },
+                { text: 'الإجمالي (شامل)', id: 'total-inc' },
+                { text: 'حذف', id: 'delete' }
+            ];
+            
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.width = col.id === 'price' ? '8%' : 
+                          col.id === 'tax-toggle' ? '5%' : 
+                          col.id === 'individual-tax' ? '9%' : 
+                          col.id === 'delete' ? '2%' : '10%';
+                th.textContent = col.text;
+                headerRow.appendChild(th);
+            });
+            
+            // إضافة صف افتراضي
+            addRow(container, yearsCount);
+            setupEvents(container, yearsCount);
+        }
+
+        function addRow(container, yearsCount) {
+            const tbody = container.querySelector('tbody');
+            const rowCount = tbody.children.length + 1;
+            const row = document.createElement('tr');
+            
+            let yearInputs = '';
+            for (let i = 1; i <= yearsCount; i++) {
+                yearInputs += `<td><input type="number" class="year${i}" min="0" value="0" step="0.01"></td>`;
+            }
+            
+            row.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="item-name" placeholder="اسم البند"></td>
+                <td><input type="text" class="unit-input" placeholder="اختر أو اكتب"></td>
+                <td><input type="number" class="quantity" min="0" value="0" step="0.01"></td>
+                ${yearInputs}
+                <td><input type="number" class="price" min="0" value="0" step="0.01"></td>
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" class="item-tax-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td class="individual-tax">0.00</td>
+                <td class="total-ex">0.00</td>
+                <td class="total-tax">0.00</td>
+                <td class="total-inc">0.00</td>
+                <td><button class="delete-btn">X</button></td>
+            `;
+            
+            tbody.appendChild(row);
+            setupUnitInput(row.querySelector('.unit-input'));
+            setupNameInput(row.querySelector('.item-name'), row.querySelector('.unit-input'), row.querySelector('.price'));
+            updateRowEvents(row, container, yearsCount);
+        }
+
+        function setupUnitInput(input) {
+            const datalist = document.createElement('datalist');
+            datalist.id = 'units-list';
+            unitsList.forEach(unit => {
+                const opt = document.createElement('option');
+                opt.value = unit;
+                datalist.appendChild(opt);
+            });
+            if (!document.getElementById('units-list')) {
+                document.body.appendChild(datalist);
+            }
+            input.setAttribute('list', 'units-list');
         }
         
-        // رندر المكون الرئيسي
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function setupNameInput(nameInput, unitInput, priceInput) {
+            const suggestions = document.getElementById('suggestions');
+            
+            nameInput.addEventListener('focus', () => {
+                if (nameInput.value.trim()) {
+                    showSuggestions(nameInput.value, unitInput.value, suggestions, priceInput);
+                }
+            });
+            
+            nameInput.addEventListener('input', () => {
+                if (nameInput.value.trim()) {
+                    showSuggestions(nameInput.value, unitInput.value, suggestions, priceInput);
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+            
+            nameInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    suggestions.style.display = 'none';
+                }, 200);
+            });
+        }
+        
+        function showSuggestions(searchTerm, selectedUnit, suggestionsContainer, priceInput) {
+            suggestionsContainer.innerHTML = '';
+            suggestionsContainer.style.display = 'none';
+            
+            // محاكاة استجابة من الذكاء الاصطناعي
+            const mockResults = [
+                { name: `${searchTerm} عالي الجودة`, price: Math.floor(Math.random() * 100) + 10, source: "سوق محلية", unit: selectedUnit || "وحدة" },
+                { name: `${searchTerm} اقتصادي`, price: Math.floor(Math.random() * 50) + 5, source: "مورد كبير", unit: selectedUnit || "وحدة" },
+                { name: `${searchTerm} مستورد`, price: Math.floor(Math.random() * 200) + 50, source: "استيراد", unit: selectedUnit || "وحدة" }
+            ];
+            
+            // تحديد موقع مربع الإدخال
+            const rect = priceInput.getBoundingClientRect();
+            suggestionsContainer.style.top = (rect.bottom + window.scrollY) + 'px';
+            suggestionsContainer.style.right = (window.innerWidth - rect.right) + 'px';
+            
+            mockResults.forEach(suggestion => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `
+                    <span>${suggestion.name}</span> 
+                    <span class="suggestion-price">(${suggestion.price} ر.س)</span>
+                    <span class="suggestion-source">[${suggestion.source}]</span>
+                `;
+                div.addEventListener('click', () => {
+                    const row = priceInput.closest('tr');
+                    row.querySelector('.item-name').value = suggestion.name;
+                    if (selectedUnit) row.querySelector('.unit-input').value = selectedUnit;
+                    row.querySelector('.price').value = suggestion.price;
+                    calculateRow(row, parseInt(row.closest('.calculator-table').querySelectorAll('.header-row th').length) - 13);
+                    calculateAll(row.closest('.calculator'), parseInt(row.closest('.calculator-table').querySelectorAll('.header-row th').length) - 13);
+                    suggestionsContainer.style.display = 'none';
+                });
+                suggestionsContainer.appendChild(div);
+            });
+            
+            suggestionsContainer.style.display = 'block';
+        }
+
+        function distributeQuantity(row, yearsCount) {
+            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            const years = [];
+            for (let i = 1; i <= yearsCount; i++) {
+                years.push(row.querySelector(`.year${i}`));
+            }
+            const share = (qty / yearsCount).toFixed(2);
+            years.forEach(input => {
+                if (!input.value || input.value === "0") input.value = share;
+            });
+            calculateRow(row, yearsCount);
+        }
+
+        function updateTotalFromYears(row, yearsCount) {
+            let total = 0;
+            for (let i = 1; i <= yearsCount; i++) {
+                total += parseFloat(row.querySelector(`.year${i}`).value) || 0;
+            }
+            row.querySelector('.quantity').value = total.toFixed(2);
+            calculateRow(row, yearsCount);
+        }
+
+        function calculateRow(row, yearsCount) {
+            const priceInput = row.querySelector('.price');
+            const price = parseFloat(priceInput.value) || 0;
+            const isTaxExcluded = row.querySelector('.item-tax-toggle').checked;
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+
+            let basePrice, taxAmount;
+
+            if (isTaxExcluded) {
+                basePrice = price;
+                taxAmount = price * taxRate;
+            } else {
+                basePrice = price / (1 + taxRate);
+                taxAmount = price - basePrice;
+            }
+
+            const totalPriceEx = quantity * basePrice;
+            const totalTax = totalPriceEx * taxRate;
+            const totalPriceInc = totalPriceEx + totalTax;
+
+            row.querySelector('.individual-tax').textContent = taxAmount.toFixed(2);
+            row.querySelector('.total-ex').textContent = totalPriceEx.toFixed(2);
+            row.querySelector('.total-tax').textContent = totalTax.toFixed(2);
+            row.querySelector('.total-inc').textContent = totalPriceInc.toFixed(2);
+        }
+
+        function calculateAll(container, yearsCount) {
+            let totalQty = 0, totalEx = 0, totalTax = 0, totalInc = 0, totalIndTax = 0;
+
+            container.querySelectorAll('tbody tr').forEach(row => {
+                totalQty += parseFloat(row.querySelector('.quantity').value) || 0;
+                totalEx += parseFloat(row.querySelector('.total-ex').textContent) || 0;
+                totalTax += parseFloat(row.querySelector('.total-tax').textContent) || 0;
+                totalInc += parseFloat(row.querySelector('.total-inc').textContent) || 0;
+                totalIndTax += parseFloat(row.querySelector('.individual-tax').textContent) || 0;
+            });
+
+            // تحديث التفقيط مع الأرقام
+            container.querySelector('#total-quantity-text').textContent = 
+                `${totalQty.toFixed(2)} - ${numberToArabicWords(totalQty)}`;
+            container.querySelector('#total-individual-tax-text').textContent = 
+                `${totalIndTax.toFixed(2)} - ${formatArabicCurrency(totalIndTax)}`;
+            container.querySelector('#total-ex-text').textContent = 
+                `${totalEx.toFixed(2)} - ${formatArabicCurrency(totalEx)}`;
+            container.querySelector('#total-tax-text').textContent = 
+                `${totalTax.toFixed(2)} - ${formatArabicCurrency(totalTax)}`;
+            container.querySelector('#total-inc-text').textContent = 
+                `${totalInc.toFixed(2)} - ${formatArabicCurrency(totalInc)}`;
+        }
+
+        function updateRowEvents(row, container, yearsCount) {
+            row.querySelector('.quantity').addEventListener('change', () => {
+                distributeQuantity(row, yearsCount);
+                calculateAll(container, yearsCount);
+            });
+            
+            for (let i = 1; i <= yearsCount; i++) {
+                row.querySelector(`.year${i}`).addEventListener('input', () => {
+                    updateTotalFromYears(row, yearsCount);
+                    calculateAll(container, yearsCount);
+                });
+            }
+            
+            row.querySelector('.price').addEventListener('input', () => {
+                calculateRow(row, yearsCount);
+                calculateAll(container, yearsCount);
+            });
+            
+            row.querySelector('.item-tax-toggle').addEventListener('change', () => {
+                calculateRow(row, yearsCount);
+                calculateAll(container, yearsCount);
+            });
+            
+            row.querySelector('.delete-btn').addEventListener('click', () => {
+                if (container.querySelector('tbody').children.length > 1) {
+                    row.remove();
+                    updateRowNumbers(container);
+                    calculateAll(container, yearsCount);
+                }
+            });
+        }
+
+        function updateRowNumbers(container) {
+            container.querySelectorAll('tbody tr').forEach((tr, i) => {
+                tr.cells[0].textContent = i + 1;
+            });
+        }
+
+        function setupEvents(container, yearsCount) {
+            // زر إضافة صف
+            container.querySelector('.add-btn').addEventListener('click', () => {
+                addRow(container, yearsCount);
+                updateRowNumbers(container);
+            });
+            
+            // زر مسح الكل
+            container.querySelector('.reset-btn').addEventListener('click', () => {
+                if (confirm("مسح الكل؟")) {
+                    container.querySelector('tbody').innerHTML = '';
+                    container.querySelector('.project-name').value = '';
+                    addRow(container, yearsCount);
+                    calculateAll(container, yearsCount);
+                }
+            });
+            
+            // تصدير
+            container.querySelector('.export-btn').addEventListener('click', () => {
+                const projectName = container.querySelector('.project-name').value || 'مشروع';
+                const data = [[projectName], []];
+                
+                // إعداد الرأس بالاتجاه الصحيح
+                const headers = ['م', 'البند', 'وحدة', 'الكمية'];
+                for (let i = 1; i <= yearsCount; i++) {
+                    headers.push(`السنة ${i}`);
+                }
+                headers.push('السعر', 'ضريبة', 'ض.فردي', 'غير شامل', 'ض.إجمالي', 'شامل', 'حذف');
+                data.push(headers);
+                
+                // إضافة البيانات
+                container.querySelectorAll('tbody tr').forEach(row => {
+                    const rowData = [
+                        row.cells[0].textContent,
+                        row.querySelector('.item-name').value,
+                        row.querySelector('.unit-input').value,
+                        row.querySelector('.quantity').value
+                    ];
+                    for (let i = 1; i <= yearsCount; i++) {
+                        rowData.push(row.querySelector(`.year${i}`).value);
+                    }
+                    rowData.push(
+                        row.querySelector('.price').value,
+                        row.querySelector('.item-tax-toggle').checked ? 'نعم' : 'لا',
+                        row.querySelector('.individual-tax').textContent,
+                        row.querySelector('.total-ex').textContent,
+                        row.querySelector('.total-tax').textContent,
+                        row.querySelector('.total-inc').textContent,
+                        'X'
+                    );
+                    data.push(rowData);
+                });
+                
+                // إعداد ورقة العمل
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [
+                    {wch: 5}, {wch: 25}, {wch: 10}, {wch: 12},
+                    ...Array(yearsCount).fill({wch: 10}),
+                    {wch: 12}, {wch: 8}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 5}
+                ];
+                
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'الكميات');
+                XLSX.writeFile(wb, `${projectName}.xlsx`);
+            });
+            
+            // استيراد
+            container.querySelector('.import-btn').addEventListener('click', () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.xlsx, .xls';
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, {type: 'array'});
+                            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                            const jsonData = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                            
+                            // تنظيف الجدول الحالي
+                            container.querySelector('tbody').innerHTML = '';
+                            
+                            // معالجة البيانات
+                            for (let i = 1; i < jsonData.length; i++) {
+                                if (jsonData[i].length < 4) continue;
+                                
+                                addRow(container, yearsCount);
+                                const row = container.querySelector('tbody tr:last-child');
+                                
+                                // ملء البيانات
+                                const rowData = jsonData[i];
+                                row.querySelector('.item-name').value = rowData[1] || '';
+                                row.querySelector('.unit-input').value = rowData[2] || '';
+                                row.querySelector('.quantity').value = rowData[3] || 0;
+                                
+                                // ملء سنوات
+                                const yearStartIndex = 4;
+                                for (let j = 0; j < yearsCount; j++) {
+                                    if (rowData[yearStartIndex + j] !== undefined) {
+                                        row.querySelector(`.year${j+1}`).value = rowData[yearStartIndex + j] || 0;
+                                    }
+                                }
+                                
+                                // ملء السعر
+                                const priceIndex = yearStartIndex + yearsCount;
+                                if (rowData[priceIndex] !== undefined) {
+                                    row.querySelector('.price').value = rowData[priceIndex] || 0;
+                                }
+                                
+                                // ملء الضريبة
+                                const taxIndex = priceIndex + 1;
+                                if (rowData[taxIndex] !== undefined) {
+                                    row.querySelector('.item-tax-toggle').checked = rowData[taxIndex] === 'نعم';
+                                }
+                                
+                                calculateRow(row, yearsCount);
+                            }
+                            
+                            updateRowNumbers(container);
+                            calculateAll(container, yearsCount);
+                        } catch (error) {
+                            alert('خطأ في قراءة الملف: ' + error.message);
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                };
+                fileInput.click();
+            });
+            
+            // طباعة
+            container.querySelector('.print-btn').addEventListener('click', () => {
+                window.print();
+            });
+        }
+
+        function showCalculator(yearsCount) {
+            // إخفاء القائمة الرئيسية
+            document.getElementById('main-menu').style.display = 'none';
+            
+            // إخفاء جميع الحاسبات
+            document.querySelectorAll('.calculator').forEach(calc => {
+                calc.style.display = 'none';
+            });
+            
+            // عرض الحاسبة المطلوبة
+            const container = document.getElementById(`calculator-${yearsCount}`);
+            if (container.innerHTML === '') {
+                createCalculator(yearsCount);
+            }
+            container.style.display = 'block';
+        }
+
+        // إنشاء الحاسبات عند التحميل
+        document.addEventListener('DOMContentLoaded', () => {
+            // إنشاء الحاسبات
+            for (let i = 2; i <= 5; i++) {
+                const container = document.getElementById(`calculator-${i}`);
+                if (container) {
+                    if (container.innerHTML === '') {
+                        createCalculator(i);
+                    }
+                    container.style.display = 'none';
+                }
+            }
+            
+            // إعداد قائمة الاقتراحات
+            const suggestions = document.createElement('div');
+            suggestions.id = 'suggestions';
+            suggestions.className = 'suggestions';
+            if (!document.getElementById('suggestions')) {
+                document.body.appendChild(suggestions);
+            }
+        });
     </script>
 </body>
 </html>
